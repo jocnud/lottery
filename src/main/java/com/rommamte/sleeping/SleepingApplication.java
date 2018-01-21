@@ -13,6 +13,10 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
@@ -36,6 +40,12 @@ class Api {
 
 	public static final List<String> members = new ArrayList(Arrays.asList("Nirvik", "Kabir", "Partha", "Shabby"));
 
+	@Value("${device}")
+	private String device;
+
+	@Autowired
+	private HttpServletRequest request;
+
 	public String getRandomMember() {
 		int index = new Random().nextInt(members.size());
 		return members.get(index);
@@ -48,9 +58,19 @@ class Api {
 	@GetMapping("/lottery")
 	@CrossOrigin
 	public ResponseEntity<List<String>> doLottery() {
+		List<String> winners = new ArrayList<>();
+		String userAgent = request.getHeader("user-agent").toLowerCase();
+		String randomDevice = getRandomDevice();
+		
+		System.out.println(userAgent);
+		System.out.println(randomDevice);
+
+		if (!userAgent.contains(randomDevice)) {
+			winners.add("Opps!I am sorry, not your day ask somebody else to try");
+			return new ResponseEntity<List<String>>(winners, HttpStatus.OK);
+		}
 
 		int numOfMemeber = getRandomNumOfMembers();
-		List<String> winners = new ArrayList<>();
 		while (numOfMemeber != 0) {
 			String member = getRandomMember();
 			if (!winners.contains(member)) {
@@ -59,6 +79,11 @@ class Api {
 			}
 		}
 		return new ResponseEntity<List<String>>(winners, HttpStatus.OK);
+	}
+
+	private String getRandomDevice() {
+		List<String> devices = Arrays.asList(device.split(","));
+		return devices.get(new Random().nextInt(devices.size()));
 	}
 
 	@PostMapping("/completeLottery")
