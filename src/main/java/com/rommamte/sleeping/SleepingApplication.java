@@ -17,6 +17,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +46,7 @@ class Api {
 	}
 
 	@GetMapping("/lottery")
+	@CrossOrigin
 	public ResponseEntity<List<String>> doLottery() {
 
 		int numOfMemeber = getRandomNumOfMembers();
@@ -60,6 +62,7 @@ class Api {
 	}
 
 	@PostMapping("/completeLottery")
+	@CrossOrigin
 	public ResponseEntity<Void> completeLottery(@RequestBody List<String> winners) throws IOException {
 		File records = new File("records.csv");
 
@@ -81,6 +84,7 @@ class Api {
 	}
 
 	@GetMapping("/history")
+	@CrossOrigin
 	public ResponseEntity<List<List<String>>> getHistory() throws IOException {
 		List<List<String>> history = new ArrayList<>();
 		File records = new File("records.csv");
