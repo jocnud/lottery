@@ -5,10 +5,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,6 +48,12 @@ class Api {
 	@Value("${device}")
 	private String device;
 
+	@Value("${deviceRandom}")
+	private String deviceRandom;
+
+	@Value("${mutipleLotteryAllowed}")
+	private String mutipleLotteryAllowed;
+
 	@Autowired
 	private HttpServletRequest request;
 
@@ -57,16 +68,21 @@ class Api {
 
 	@GetMapping("/lottery")
 	@CrossOrigin
-	public ResponseEntity<List<String>> doLottery() {
+	public ResponseEntity<List<String>> doLottery() throws IOException, ParseException {
 		List<String> winners = new ArrayList<>();
 		String userAgent = request.getHeader("user-agent").toLowerCase();
 		String randomDevice = getRandomDevice();
-		
+
 		System.out.println(userAgent);
 		System.out.println(randomDevice);
 
-		if (!userAgent.contains(randomDevice)) {
+		if (deviceRandom.equals("true") && (!userAgent.contains(randomDevice))) {
 			winners.add("Opps!I am sorry, not your day ask somebody else to try");
+			return new ResponseEntity<List<String>>(winners, HttpStatus.OK);
+		}
+
+		if (mutipleLotteryAllowed.equals("false") && isRecordExistsForToday()) {
+			winners.add("Lottery completed for today");
 			return new ResponseEntity<List<String>>(winners, HttpStatus.OK);
 		}
 
@@ -79,6 +95,27 @@ class Api {
 			}
 		}
 		return new ResponseEntity<List<String>>(winners, HttpStatus.OK);
+	}
+
+	private boolean isRecordExistsForToday() throws IOException {
+		
+		long count =fetchHistory()
+			.stream()
+			.map(list -> list.get(0))
+			.peek(str -> {System.out.println("from list "+str);})
+			.filter(str -> {
+				return dateMatches(str);
+			})
+			.peek(str -> {System.out.println("After filter "+str);})
+			.count();
+		
+		return (count > 0 ) ? true : false;
+	
+
+	}
+
+	private static boolean dateMatches(String str) {
+		return LocalDate.parse(str).compareTo(LocalDate.now()) == 0 ? true : false;
 	}
 
 	private String getRandomDevice() {
@@ -95,11 +132,14 @@ class Api {
 			records.createNewFile();
 
 		StringBuilder csvRecord = new StringBuilder();
+		csvRecord.append(LocalDate.now().toString());
+		csvRecord.append(",");
+
 		for (String member : winners) {
 			csvRecord.append(member);
 			csvRecord.append(",");
 		}
-		csvRecord.append(LocalDate.now().toString());
+
 		csvRecord.append(System.lineSeparator());
 
 		Files.write(Paths.get(records.getAbsolutePath()), csvRecord.toString().getBytes(), StandardOpenOption.APPEND);
@@ -111,12 +151,17 @@ class Api {
 	@GetMapping("/history")
 	@CrossOrigin
 	public ResponseEntity<List<List<String>>> getHistory() throws IOException {
-		List<List<String>> history = new ArrayList<>();
-		File records = new File("records.csv");
+		return new ResponseEntity<>(fetchHistory(), HttpStatus.OK);
 
+	}
+
+	private List<List<String>> fetchHistory() throws IOException {
+
+		File records = new File("records.csv");
 		if (!records.exists())
 			records.createNewFile();
 
+		List<List<String>> history = new ArrayList<>();
 		try (Stream<String> lines = Files.lines(Paths.get(records.getAbsolutePath()))) {
 			List<List<String>> values = lines.map(line -> Arrays.asList(line.split(","))).collect(Collectors.toList());
 
@@ -128,9 +173,7 @@ class Api {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
-		return new ResponseEntity<>(history, HttpStatus.OK);
-
+		return history;
 	}
 
 }
