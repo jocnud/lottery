@@ -63,7 +63,7 @@ class Api {
 	}
 
 	public int getRandomNumOfMembers() {
-		return new Random().nextInt(2) + 1;
+		return new Random().nextInt(1) + 1;
 	}
 
 	@GetMapping("/lottery")
