@@ -56,6 +56,16 @@ class Api {
 
 	@Autowired
 	private HttpServletRequest request;
+	static double[] doubleRoom = {0.25, 0.25, 0.25, 0.25};
+	static String[] scoreRoom = {"Shahbaz", "Kabir", "Partha", "Nirvik"};
+
+	public static String getScore(double[] pp, String[] score) {
+		double[] cdf = pp.clone();
+		for (int i = 1; i < cdf.length; i++)
+			cdf[i] += cdf[i - 1];
+		return score[Math.abs(Arrays.binarySearch(cdf, Math.random())) - 1];
+
+	}
 
 	public String getRandomMember() {
 		int index = new Random().nextInt(members.size());
@@ -85,16 +95,7 @@ class Api {
 			winners.add("Lottery completed for today");
 			return new ResponseEntity<List<String>>(winners, HttpStatus.OK);
 		}
-
-		int numOfMemeber = getRandomNumOfMembers();
-		while (numOfMemeber != 0) {
-			String member = getRandomMember();
-			if (!winners.contains(member)) {
-				winners.add(member);
-				numOfMemeber--;
-			}
-		}
-		return new ResponseEntity<List<String>>(winners, HttpStatus.OK);
+		return new ResponseEntity<List<String>>(Arrays.asList(getScore(doubleRoom, scoreRoom)), HttpStatus.OK);
 	}
 
 	private boolean isRecordExistsForToday() throws IOException {
