@@ -43,7 +43,7 @@ public class SleepingApplication {
 @RestController
 class Api {
 
-	public static final List<String> members = new ArrayList(Arrays.asList("Nirvik", "Kabir", "Partha"));
+	public static final List<String> members = new ArrayList(Arrays.asList("Nirvik", "Kabir", "Shabby","Partha"));
 
 	@Value("${device}")
 	private String device;
