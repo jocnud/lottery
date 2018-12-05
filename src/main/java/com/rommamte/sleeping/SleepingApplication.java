@@ -56,6 +56,7 @@ class Api {
 
 	@Autowired
 	private HttpServletRequest request;
+	//equal probability
 	static double[] doubleRoom = {0.25, 0.25, 0.25, 0.25};
 	static String[] scoreRoom = {"Shahbaz", "Kabir", "Partha", "Nirvik"};
 
